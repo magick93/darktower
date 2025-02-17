@@ -1,0 +1,78 @@
+---
+- name: Deploy Komodo with SQLite backend
+  hosts: all
+  become: true
+  vars:
+    komodo_dir: /opt/komodo
+    komodo_version: latest
+    
+  tasks:
+    - name: Create komodo directory
+      ansible.builtin.file:
+        path: "{{ komodo_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Download SQLite compose file
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/moghtech/komodo/main/compose/sqlite.compose.yaml
+        dest: "{{ komodo_dir }}/sqlite.compose.yaml"
+        mode: '0644'
+        force: no  # Only download if missing
+
+    - name: Download compose environment template
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/moghtech/komodo/main/compose/compose.env
+        dest: "{{ komodo_dir }}/compose.env"
+        mode: '0640'
+        force: no
+
+    - name: Generate secure secrets
+      block:
+      - name: Generate Komodo passkey
+        ansible.builtin.set_fact:
+          komodo_passkey: "{{ lookup('password', '/dev/null chars=ascii_letters,digits,punctuation length=32') }}"
+        
+      - name: Generate webhook secret
+        ansible.builtin.set_fact:
+          webhook_secret: "{{ lookup('password', '/dev/null chars=ascii_letters,digits,punctuation length=32') }}"
+        
+      - name: Generate JWT secret 
+        ansible.builtin.set_fact:
+          jwt_secret: "{{ lookup('password', '/dev/null chars=ascii_letters,digits,punctuation length=64') }}"
+      run_once: true
+
+    - name: Configure environment variables
+      ansible.builtin.lineinfile:
+        path: "{{ komodo_dir }}/compose.env"
+        regexp: "^{{ item.key }}="
+        line: "{{ item.key }}={{ item.value }}"
+        backrefs: true
+      loop:
+        - { key: COMPOSE_KOMODO_IMAGE_TAG, value: "{{ komodo_version }}" }
+        - { key: KOMODO_PASSKEY, value: "{{ komodo_passkey }}" }
+        - { key: KOMODO_WEBHOOK_SECRET, value: "{{ webhook_secret }}" }
+        - { key: KOMODO_JWT_SECRET, value: "{{ jwt_secret }}" }
+        - { key: KOMODO_HOST, value: "https://komodo.example.com" }  # Update this
+        - { key: KOMODO_FIRST_SERVER, value: "https://periphery:8120" }
+        - { key: PERIPHERY_ROOT_DIRECTORY, value: "/etc/komodo" }
+
+    - name: Deploy Komodo stack
+      ansible.builtin.shell: |
+        docker compose -p komodo \
+          -f {{ komodo_dir }}/sqlite.compose.yaml \
+          --env-file {{ komodo_dir }}/compose.env \
+          up -d
+      register: deploy_result
+      changed_when: "'Creating' in deploy_result.stdout"
+      
+    - name: Save generated secrets to file
+      ansible.builtin.copy:
+        content: |
+          # Generated Secrets - Keep Secure!
+          KOMODO_PASSKEY={{ komodo_passkey }}
+          KOMODO_WEBHOOK_SECRET={{ webhook_secret }}
+          KOMODO_JWT_SECRET={{ jwt_secret }}
+        dest: "{{ komodo_dir }}/secrets.txt"
+        mode: '0600'
+      when: deploy_result.changed

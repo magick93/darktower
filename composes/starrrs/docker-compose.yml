@@ -13,9 +13,10 @@ services:
             - LAN_NETWORK=192.168.2.0/24
             - NAME_SERVERS=1.1.1.1,1.0.0.1
             - ENABLE_SSL=no
+            - WEBUI_PORT=8180
             - HEALTH_CHECK_HOST=one.one.one.one
         ports:
-            - 8180:8080
+            - 8180:8180
         image: dyonr/qbittorrentvpn
     sonarr:
         image: linuxserver/sonarr:latest

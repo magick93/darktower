@@ -3,21 +3,22 @@ services:
         restart: unless-stopped
         privileged: false
         volumes:
-            - /opt/pvr/qbittorrent:/config
-            - /mnt/drive0/appdata/plex/downloads:/downloads
+            - /mnt/drive0/appdata/qbittorrent:/config
+            - /mnt/drive0/downloads:/downloads
         environment:
             - PUID=1000
             - PGID=1000
             - VPN_ENABLED=no
             - VPN_TYPE=openvpn
-            - LAN_NETWORK=192.168.2.0/24
+            # - LAN_NETWORK=192.168.2.0/24
             - NAME_SERVERS=1.1.1.1,1.0.0.1
-            - ENABLE_SSL=no
+            - ENABLE_SSL=yes
             - WEBUI_PORT=8180
             - HEALTH_CHECK_HOST=one.one.one.one
         ports:
             - 8180:8180
-        image: dyonr/qbittorrentvpn
+        image: lscr.io/linuxserver/qbittorrent:latest
+        container_name: qbittorrent
     sonarr:
         image: linuxserver/sonarr:latest
         container_name: sonarr

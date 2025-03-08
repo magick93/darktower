@@ -66,11 +66,11 @@ services:
         - PUID=1000
         - PGID=1000
         - TZ=Etc/UTC
-        - JELLYFIN_PublishedServerUrl=http://192.168.0.5 #optional
+         #optional
       volumes:
-        - /path/to/jellyfin/library:/config
-        - /path/to/tvseries:/data/tvshows
-        - /path/to/movies:/data/movies
+        - /mnt/drive0/appdata/jellyfin/library:/config
+        - /mnt/drive0/tvseries:/data/tvshows
+        - /mnt/drive0/movies:/data/movies
       ports:
         - 8096:8096
         - 8920:8920 #optional

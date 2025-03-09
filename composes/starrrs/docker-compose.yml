@@ -28,8 +28,8 @@ services:
             - TZ=Etc/UTC
         volumes:
             - /opt/pvr/sonarr:/config
-            - /mnt/drive0/appdata/plex/tv:/tv
-            - /mnt/drive0/appdata/plex/downloads:/downloads
+            - /mnt/drive0/downloads/tv:/tv
+            - /mnt/drive0/downloads:/downloads
         ports:
             - 8989:8989
         restart: unless-stopped

@@ -9,7 +9,7 @@ services:
   director:
     image: agoldis/sorry-cypress-director:latest
     environment:
-      DASHBOARD_URL: http://localhost:8080
+      DASHBOARD_URL: https://sorrycypress.atlasantonjosefine.org
       MONGODB_URI: 'mongodb://mongo:27017'
       MONGODB_DATABASE: 'sorry-cypress'
       EXECUTION_DRIVER: '../execution/mongo/driver'
@@ -19,6 +19,7 @@ services:
       AWS_SECRET_ACCESS_KEY: 'secret'
       S3_BUCKET: sorry-cypress
       PROBE_LOGGER: "false"
+      ALLOWED_KEYS: 'key'
     ports:
       - 1234:1234
     depends_on:

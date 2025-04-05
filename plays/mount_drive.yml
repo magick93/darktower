@@ -1,0 +1,30 @@
+---
+- name: Configure permanent mount for /dev/sdb
+  hosts: all
+  become: yes
+  tasks:
+    - name: Create mount directory
+      ansible.builtin.file:
+        path: /mnt/drive1
+        state: directory
+        mode: '0755'
+
+    - name: Get filesystem UUID
+      ansible.builtin.shell: |
+        blkid -s UUID -o value /dev/sdb
+      register: uuid_result
+      changed_when: false
+
+    - name: Add permanent mount to fstab
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        line: "UUID={{ uuid_result.stdout }} /mnt/drive1 xfs defaults 0 0"
+        regexp: "^UUID=.* /mnt/drive1 "
+        state: present
+
+    - name: Mount filesystem
+      ansible.builtin.mount:
+        path: /mnt/drive1
+        src: UUID={{ uuid_result.stdout }}
+        fstype: xfs
+        state: mounted
